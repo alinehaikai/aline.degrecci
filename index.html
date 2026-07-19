@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#075E54">
+<title>Provador Virtual — Jornada C&A no WhatsApp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ---------- Material Symbols ---------- */
+  .ms {
+    font-family: 'Material Symbols Rounded';
+    font-weight: normal; font-style: normal;
+    line-height: 1; letter-spacing: normal; text-transform: none;
+    display: inline-block; white-space: nowrap; word-wrap: normal; direction: ltr;
+    -webkit-font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    user-select: none;
+  }
+  .ms.fill { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+  :root {
+    --wa-green: #1DAB61;
+    --wa-bubble-user: #DCF8C7;
+    --wa-header: #075E54;
+    --text-primary: #0A0A0A;
+    --shadow-wa: 0px 1px 1px 0px rgba(164,152,135,0.32), 0px 0px 1px 0px #A39F98;
+  }
+
+  body {
+    font-family: 'Roboto', -apple-system, sans-serif;
+    background: #14161a;
+    color: #e8eaed;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 24px 80px;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  .stage {
+    display: flex;
+    gap: 48px;
+    align-items: flex-start;
+    max-width: 1080px;
+    width: 100%;
+  }
+
+  /* ---------- Painel lateral ---------- */
+  .panel { flex: 1; padding-top: 24px; max-width: 420px; }
+  .panel h1 { font-size: 26px; font-weight: 700; line-height: 1.25; margin-bottom: 10px; }
+  .panel .sub { font-size: 14px; color: #9aa0a6; line-height: 1.6; margin-bottom: 28px; }
+
+  .track-label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #6f757c; margin-bottom: 12px; }
+
+  .track { list-style: none; margin-bottom: 28px; }
+  .track li {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 14px; color: #5f656c;
+    padding: 9px 0; transition: color .25s;
+  }
+  .track li .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: #33383e; flex-shrink: 0; transition: all .25s;
+  }
+  .track li.done { color: #9aa0a6; }
+  .track li.done .dot { background: var(--wa-green); }
+  .track li.active { color: #fff; font-weight: 500; }
+  .track li.active .dot { background: var(--wa-green); box-shadow: 0 0 0 4px rgba(29,171,97,.22); }
+
+  .route-badge {
+    display: inline-block; font-size: 12px; font-weight: 500;
+    padding: 5px 11px; border-radius: 100px; margin-bottom: 22px;
+    background: #23262b; color: #9aa0a6; border: 1px solid #2e3238;
+  }
+  .route-badge.a { background: rgba(29,171,97,.14); color: #4ade80; border-color: rgba(29,171,97,.35); }
+  .route-badge.b { background: rgba(96,165,250,.14); color: #93c5fd; border-color: rgba(96,165,250,.35); }
+
+  .btn-reset {
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    background: #23262b; color: #e8eaed; border: 1px solid #33383e;
+    padding: 10px 18px; border-radius: 8px; cursor: pointer; transition: all .18s;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .btn-reset .ms { font-size: 17px; }
+  .btn-reset:hover { background: #2e3238; border-color: #454b52; }
+
+  .legend { margin-top: 32px; font-size: 12px; color: #6f757c; line-height: 1.75; border-top: 1px solid #26292e; padding-top: 18px; }
+  .legend strong { color: #9aa0a6; font-weight: 500; display: block; margin-bottom: 7px; }
+  .legend .add { color: #d9a441; }
+
+  /* ---------- iPhone ---------- */
+  .phone-wrap { flex-shrink: 0; }
+
+  .phone {
+    position: relative;
+    width: 422px; height: 876px;
+    background: #1c1e22;
+    border-radius: 58px;
+    padding: 16px;
+    box-shadow: 0 0 0 2px #35393f, 0 30px 70px rgba(0,0,0,.6);
+  }
+  .phone::before, .phone::after {
+    content: ''; position: absolute; left: -3px; width: 3px; border-radius: 2px 0 0 2px; background: #2b2e33;
+  }
+  .phone::before { top: 176px; height: 62px; }
+  .phone::after  { top: 254px; height: 62px; }
+
+  .screen {
+    position: relative; width: 390px; height: 844px;
+    background: #fff; border-radius: 44px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+
+  .island {
+    position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+    width: 118px; height: 33px; background: #000; border-radius: 20px; z-index: 60;
+  }
+
+  /* ---------- WhatsApp header ---------- */
+  .wa-header {
+    background: var(--wa-header); color: #fff;
+    padding: 46px 14px 11px;
+    display: flex; align-items: center; gap: 11px; flex-shrink: 0; z-index: 40;
+  }
+  .wa-header .back { font-size: 24px; line-height: 1; opacity: .95; }
+  .wa-header .avatar {
+    width: 37px; height: 37px; border-radius: 50%;
+    background: #fff; color: #0b3d33;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; letter-spacing: -.02em; flex-shrink: 0;
+  }
+  .wa-header .meta { flex: 1; min-width: 0; }
+  .wa-header .name { font-size: 15.5px; font-weight: 500; line-height: 1.25; }
+  .wa-header .status { font-size: 11.5px; opacity: .78; line-height: 1.3; }
+  .wa-header .icons { display: flex; gap: 19px; font-size: 21px; opacity: .95; }
+
+  /* ---------- Chat ---------- */
+  .chat {
+    flex: 1; overflow-y: auto; background: #fff;
+    padding: 14px 12px 8px;
+    display: flex; flex-direction: column; gap: 9px;
+    scroll-behavior: smooth;
+  }
+  .chat::-webkit-scrollbar { width: 0; }
+
+  .row { display: flex; }
+  .row.left  { justify-content: flex-start; }
+  .row.right { justify-content: flex-end; }
+
+  .bubble {
+    position: relative; max-width: 258px;
+    border-radius: 5px; box-shadow: var(--shadow-wa);
+    animation: pop .22s ease-out;
+  }
+  @keyframes pop { from { opacity: 0; transform: translateY(9px); } to { opacity: 1; transform: none; } }
+
+  .bubble.bot  { background: #fff; }
+  .bubble.user { background: var(--wa-bubble-user); }
+
+  .bubble .body { padding: 5px 8px; }
+  .bubble .txt {
+    font-size: 14px; line-height: 16px; color: var(--text-primary);
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .bubble .txt b { font-weight: 700; }
+  .bubble .stamp {
+    display: flex; justify-content: flex-end; align-items: center; gap: 2px;
+    padding-top: 6px; height: 23px;
+    font-size: 10px; line-height: 16px; color: rgba(0,0,0,.5);
+  }
+
+  .tail { position: absolute; top: 0; width: 8px; height: 13px; }
+  .tail.l { left: -7px;  background: #fff; clip-path: polygon(100% 0, 100% 100%, 0 0); }
+  .tail.r { right: -7px; background: var(--wa-bubble-user); clip-path: polygon(0 0, 0 100%, 100% 0); }
+
+  .thumb { width: 100%; border-radius: 8px; display: block; background: #f3f3f3; }
+  .bubble .media { padding: 5px; }
+  .bubble .media .txt { padding: 8px 3px 0; }
+
+  /* botões dentro do balão */
+  .btns { border-top: 1px solid rgba(0,0,0,.1); border-radius: 0 0 5px 5px; overflow: hidden; }
+  .btns .b {
+    width: 100%; background: #fff; border: 0; border-top: 1px solid rgba(0,0,0,.08);
+    font-family: inherit; font-size: 14px; line-height: 14px; color: var(--wa-green);
+    height: 40px; display: flex; align-items: center; justify-content: center; gap: 5px;
+    cursor: pointer; transition: background .15s;
+  }
+  .btns .b:first-child { border-top: 0; }
+  .btns .b:hover:not(:disabled) { background: #f2fbf6; }
+  .btns .b:disabled { color: #b9bdc0; cursor: default; }
+  .btns .b .ms { font-size: 16px; }
+
+  /* quick replies (fora do balão, rota B) */
+  .qr { display: flex; flex-direction: column; gap: 2px; width: 242px; margin-top: 3px; }
+  .qr .b {
+    background: #fff; border: 0; border-radius: 5px; box-shadow: var(--shadow-wa);
+    font-family: inherit; font-size: 14px; line-height: 14px; color: var(--wa-green);
+    height: 40px; cursor: pointer; transition: background .15s;
+  }
+  .qr .b:hover:not(:disabled) { background: #f2fbf6; }
+  .qr .b:disabled { color: #b9bdc0; cursor: default; }
+
+  /* typing */
+  .typing { display: flex; gap: 3.5px; padding: 13px 12px; }
+  .typing i {
+    width: 7px; height: 7px; border-radius: 50%; background: #b6bcc2;
+    animation: blink 1.3s infinite;
+  }
+  .typing i:nth-child(2) { animation-delay: .18s; }
+  .typing i:nth-child(3) { animation-delay: .36s; }
+  @keyframes blink { 0%,60%,100% { opacity: .3; } 30% { opacity: 1; } }
+
+  /* ---------- Input bar ---------- */
+  .input-bar {
+    flex-shrink: 0; padding: 7px 9px 22px;
+    display: flex; align-items: center; gap: 7px; background: #f6f6f6;
+  }
+  .input-bar .field {
+    flex: 1; background: #fff; border-radius: 20px; padding: 9px 14px;
+    font-size: 14px; color: #a8adb2; box-shadow: 0 1px 1px rgba(0,0,0,.06);
+  }
+  .input-bar .mic {
+    width: 38px; height: 38px; border-radius: 50%; background: var(--wa-green);
+    display: flex; align-items: center; justify-content: center; color: #fff; font-size: 20px; flex-shrink: 0;
+  }
+
+  /* ---------- Bottom sheet (List Picker) ---------- */
+  .sheet-mask {
+    position: absolute; inset: 0; background: rgba(0,0,0,.42);
+    opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 50;
+  }
+  .sheet-mask.on { opacity: 1; pointer-events: auto; }
+
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 51;
+    background: #fff; border-radius: 10px 10px 0 0;
+    transform: translateY(100%); transition: transform .3s cubic-bezier(.32,.72,0,1);
+    max-height: 82%; display: flex; flex-direction: column;
+  }
+  .sheet.on { transform: none; }
+
+  .sheet-title {
+    position: relative; padding: 20px; text-align: center;
+    font-size: 14px; font-weight: 500; color: #3D3D3D;
+  }
+  .sheet-title .x {
+    position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
+    width: 20px; height: 20px; cursor: pointer; font-size: 20px; line-height: 20px; color: #3D3D3D;
+  }
+
+  .sheet-opts { padding: 0 10px; overflow-y: auto; flex: 1; }
+  .sheet-opts::-webkit-scrollbar { width: 0; }
+  .opt-section { padding: 10px; font-size: 14px; color: var(--wa-green); }
+  .opt-row {
+    display: flex; align-items: center; padding: 5px 0; cursor: pointer;
+    transition: background .15s; border-radius: 6px;
+  }
+  .opt-row:hover { background: #fafafa; }
+  .opt-row .label { flex: 1; padding: 5px 10px 2px; font-size: 14px; color: var(--text-primary); }
+  .opt-row .radio {
+    width: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .opt-row .radio .ms { font-size: 21px; color: #c4c9cd; transition: color .18s; }
+  .opt-row.sel .radio .ms { color: var(--wa-green); }
+
+  .sheet-desc { padding: 20px; text-align: center; font-size: 12px; color: #A6A6A6; }
+  .sheet-send { padding: 0 20px 24px; }
+  .sheet-send button {
+    width: 100%; height: 40px; border: 0; border-radius: 5px;
+    background: var(--wa-green); color: #fff;
+    font-family: inherit; font-size: 14px; line-height: 14px; cursor: pointer;
+    transition: opacity .18s;
+  }
+  .sheet-send button:disabled { opacity: .38; cursor: default; }
+
+  /* ---------- Overlay do Provador (WebView) ---------- */
+  .overlay {
+    position: absolute; inset: 0; z-index: 55; background: #fff;
+    display: flex; flex-direction: column;
+    opacity: 0; pointer-events: none; transition: opacity .28s;
+  }
+  .overlay.on { opacity: 1; pointer-events: auto; }
+  .overlay .ov-bar {
+    padding: 48px 16px 12px; background: #f6f6f6; border-bottom: 1px solid #e6e6e6;
+    display: flex; align-items: center; gap: 10px; font-size: 13px; color: #5f656c;
+  }
+  .overlay .ov-bar .x { cursor: pointer; font-size: 20px; color: #3D3D3D; }
+  .overlay .ov-body {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 16px; overflow: hidden; cursor: pointer; position: relative;
+  }
+  .overlay .ov-body img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .overlay .ov-hint {
+    position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,.74); color: #fff; font-size: 12px;
+    padding: 8px 15px; border-radius: 100px; white-space: nowrap;
+    animation: bob 1.8s ease-in-out infinite;
+  }
+  @keyframes bob { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-5px); } }
+
+  .proc { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+  .proc .ring {
+    width: 46px; height: 46px; border-radius: 50%;
+    border: 3px solid #e3e6e8; border-top-color: var(--wa-green);
+    animation: spin .85s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .proc .t { font-size: 14px; color: #3D3D3D; }
+  .proc .s { font-size: 12px; color: #9aa0a6; margin-top: -12px; }
+  .flag {
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(217,164,65,.16); color: #a97a1c; border: 1px solid rgba(217,164,65,.4);
+    font-size: 10px; padding: 4px 9px; border-radius: 5px;
+  }
+
+  .note {
+    align-self: center; background: #f3f4f6; color: #7c8189;
+    font-size: 11.5px; padding: 7px 13px; border-radius: 7px; text-align: center; max-width: 250px;
+  }
+
+  /* toggle do painel: só existe no modo celular */
+  .panel-toggle, .panel-close { display: none; }
+
+  /* ---------- Tablet / janela estreita: mantém o frame ---------- */
+  @media (max-width: 980px) {
+    .stage { flex-direction: column-reverse; align-items: center; gap: 32px; }
+    .panel { max-width: 422px; width: 100%; }
+  }
+
+  @media (max-width: 620px) and (min-width: 481px) {
+    body { padding: 20px 8px 40px; }
+    .phone { transform: scale(.92); transform-origin: top center; }
+  }
+
+  /* ---------- Celular: vira app de tela cheia ---------- */
+  /* 480px cobre a largura lógica de praticamente todos os smartphones atuais (iPhone: 390-430px, Android: 360-480px) */
+  @media (max-width: 480px) {
+    body { padding: 0; background: #075E54; display: block; }
+    .stage { display: block; gap: 0; max-width: none; }
+
+    .phone-wrap { width: 100%; }
+    .phone {
+      width: 100%; height: 100vh; height: 100dvh;
+      padding: 0; border-radius: 0; box-shadow: none; background: #fff;
+    }
+    .phone::before, .phone::after { display: none; }
+
+    .screen {
+      width: 100%; height: 100vh; height: 100dvh; border-radius: 0;
+    }
+    .island { display: none; }
+
+    /* respeita notch e barra inferior */
+    .wa-header { padding-top: calc(env(safe-area-inset-top, 0px) + 12px); }
+    .input-bar { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 10px); }
+    .overlay .ov-bar { padding-top: calc(env(safe-area-inset-top, 0px) + 14px); }
+    .sheet { max-height: 76%; }
+    .sheet-send { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); }
+
+    /* balões podem crescer um pouco na tela real */
+    .bubble { max-width: 76vw; }
+    .qr { width: 72vw; max-width: 260px; }
+
+    /* painel vira overlay acionado pelo ⋮ */
+    .panel-toggle { display: inline-block; }
+    .panel-close {
+      display: block; position: absolute; top: 18px; right: 18px;
+      font-size: 24px; color: #9aa0a6; cursor: pointer;
+    }
+    .panel {
+      position: fixed; inset: 0; z-index: 90;
+      max-width: none; width: 100%; height: 100%;
+      background: #14161a; overflow-y: auto;
+      padding: calc(env(safe-area-inset-top, 0px) + 32px) 26px
+               calc(env(safe-area-inset-bottom, 0px) + 40px);
+      transform: translateY(100%); transition: transform .3s cubic-bezier(.32,.72,0,1);
+    }
+    .panel.on { transform: none; }
+    .legend { margin-bottom: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <!-- ============ PAINEL ============ -->
+  <div class="panel" id="panel">
+    <span class="ms panel-close" onclick="togglePanel()">close</span>
+    <h1>Provador Virtual</h1>
+    <p class="sub">Jornada de compra C&amp;A no WhatsApp. Transformar intenção em compra — o cliente vê a peça no próprio corpo antes de decidir.</p>
+
+    <div class="route-badge" id="badge">Aguardando escolha de rota</div>
+
+    <p class="track-label">Progresso da jornada</p>
+    <ul class="track" id="track">
+      <li data-k="interesse"><span class="dot"></span>Interesse na peça</li>
+      <li data-k="ramo"><span class="dot"></span>Escolha do caminho</li>
+      <li data-k="explora"><span class="dot"></span>Exploração / intenção</li>
+      <li data-k="provador"><span class="dot"></span>Provador Virtual</li>
+      <li data-k="tamanho"><span class="dot"></span>Seleção de tamanho</li>
+      <li data-k="sacola"><span class="dot"></span>Sacola e subtotal</li>
+      <li data-k="checkout"><span class="dot"></span>Finalizar compra</li>
+    </ul>
+
+    <button class="btn-reset" onclick="reset()"><span class="ms">refresh</span>Reiniciar jornada</button>
+
+    <div class="legend">
+      <strong>Sobre este protótipo</strong>
+      Conteúdo, cores e componentes reproduzidos do Figma. As duas rotas do card de produto são navegáveis e convergem no provador.
+      <br><br>
+      <span class="add">◆ Adições ao design original</span>, sinalizadas em tela: header do WhatsApp, estado de processamento do provador e telas ainda não desenhadas (marcadas como tal).
+    </div>
+  </div>
+
+  <!-- ============ IPHONE ============ -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="screen">
+        <div class="island"></div>
+
+        <div class="wa-header">
+          <span class="ms back">arrow_back_ios_new</span>
+          <div class="avatar">C&amp;A</div>
+          <div class="meta">
+            <div class="name">C&amp;A</div>
+            <div class="status">online</div>
+          </div>
+          <div class="icons">
+            <span class="ms fill">videocam</span>
+            <span class="ms fill">call</span>
+            <span class="ms panel-toggle" onclick="togglePanel()">more_vert</span>
+          </div>
+        </div>
+
+        <div class="chat" id="chat"></div>
+
+        <div class="input-bar">
+          <div class="field">Mensagem</div>
+          <div class="mic"><span class="ms fill">mic</span></div>
+        </div>
+
+        <!-- List Picker -->
+        <div class="sheet-mask" id="mask" onclick="closeSheet()"></div>
+        <div class="sheet" id="sheet">
+          <div class="sheet-title">
+            <span class="ms x" onclick="closeSheet()">close</span>
+            <span id="sheetTitle">Selecionar tamanho</span>
+          </div>
+          <div class="sheet-opts" id="sheetOpts"></div>
+          <div class="sheet-desc">Toque para selecionar um item</div>
+          <div class="sheet-send"><button id="sheetSend" disabled onclick="sendSheet()">Enviar</button></div>
+        </div>
+
+        <!-- Provador -->
+        <div class="overlay" id="overlay">
+          <div class="ov-bar"><span class="ms x" onclick="skipOverlay()">close</span><span id="ovTitle">Provador Virtual</span></div>
+          <div class="ov-body" id="ovBody" onclick="nextOverlay()"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- Assets (Figma) — links expiram ~7 dias; trocar por arquivos locais para uso prolongado ---------- */
+const IMG = {
+  produto:   'https://www.figma.com/api/mcp/asset/fe9b76c5-3301-498d-9d4d-0e654a165cb0',
+  foto3:     'https://www.figma.com/api/mcp/asset/8cfc0ba9-b264-4aa4-8a6f-6ec3a2e50f73',
+  foto1:     'https://www.figma.com/api/mcp/asset/896abdfc-396d-43ef-80a4-0f2ddda06d3a',
+  provador1: 'https://www.figma.com/api/mcp/asset/41f7e372-74a2-40f1-b0c5-a9252fc1fa99',
+  provador2: 'https://www.figma.com/api/mcp/asset/5b32024a-00fa-4801-898b-644b50ad5818',
+  resultado: 'https://www.figma.com/api/mcp/asset/49919f44-9e38-4a40-9601-ce65307a1448',
+};
+
+const HORA = '11:06';
+const chat = document.getElementById('chat');
+
+let state = { route: null, size: null, usedProvador: false, busy: false };
+
+/* ---------- helpers ---------- */
+const wait  = ms => new Promise(r => setTimeout(r, ms));
+const scroll = () => { chat.scrollTop = chat.scrollHeight; };
+
+function mark(key, status) {
+  const li = document.querySelector(`#track li[data-k="${key}"]`);
+  if (!li) return;
+  document.querySelectorAll('#track li.active').forEach(x => x.classList.remove('active'));
+  if (status === 'active') li.classList.add('active');
+  li.classList.add('done');
+}
+
+function setRoute(r) {
+  state.route = r;
+  const b = document.getElementById('badge');
+  b.className = 'route-badge ' + r;
+  b.textContent = r === 'a'
+    ? 'Rota A — Adicionar à sacola (pós-intenção)'
+    : 'Rota B — Detalhes do produto (pós-informação)';
+}
+
+function stamp() { return `<div class="stamp">${HORA}</div>`; }
+
+function row(side, inner) {
+  const d = document.createElement('div');
+  d.className = 'row ' + side;
+  d.innerHTML = inner;
+  chat.appendChild(d);
+  scroll();
+  return d;
+}
+
+function pushUser(text) {
+  row('right', `<div class="bubble user"><span class="tail r"></span>
+    <div class="body"><div class="txt">${text}</div>${stamp()}</div></div>`);
+}
+
+async function typing(ms = 750) {
+  const d = row('left', `<div class="bubble bot"><span class="tail l"></span>
+    <div class="typing"><i></i><i></i><i></i></div></div>`);
+  await wait(ms);
+  d.remove();
+}
+
+async function pushBot(inner, delay = 750) {
+  await typing(delay);
+  return row('left', `<div class="bubble bot"><span class="tail l"></span>${inner}</div>`);
+}
+
+function note(text) {
+  const d = document.createElement('div');
+  d.className = 'note';
+  d.textContent = text;
+  chat.appendChild(d);
+  scroll();
+}
+
+function lockBtns(el) { el.querySelectorAll('button').forEach(b => b.disabled = true); }
+
+/* ---------- jornada ---------- */
+async function start() {
+  mark('interesse', 'active');
+  await wait(500);
+  pushUser('Blusa feminina');
+  await produtoCard();
+}
+
+async function produtoCard() {
+  const el = await pushBot(`
+    <div class="media">
+      <img class="thumb" src="${IMG.produto}" alt="Blusa de tricot gola alta texturizado marrom">
+      <div class="txt">Que tal? ✨ Blusa de tricot gola alta texturizado marrom R$ 139,99
+
+Tamanhos disponíveis: PP | M | GG</div>
+      ${stamp()}
+    </div>
+    <div class="btns">
+      <button class="b" data-go="a"><span class="ms">shopping_bag</span>Adicionar à sacola</button>
+      <button class="b" data-go="b"><span class="ms">shopping_bag</span>Detalhes do produto</button>
+    </div>`, 900);
+
+  mark('ramo', 'active');
+
+  el.querySelectorAll('[data-go]').forEach(btn => {
+    btn.onclick = () => {
+      if (state.busy) return;
+      state.busy = true;
+      lockBtns(el);
+      btn.dataset.go === 'a' ? rotaA() : rotaB();
+    };
+  });
+}
+
+/* ----- ROTA A: Adicionar à sacola ----- */
+async function rotaA() {
+  setRoute('a');
+  mark('ramo', 'done');
+  pushUser('Adicionar à sacola');
+  mark('explora', 'active');
+
+  const el = await pushBot(`
+    <div class="body">
+      <div class="txt"><b>Excelente escolha!</b>
+Agora é só <b>selecionar o tamanho</b> para continuar.
+
+Se tiver dúvidas, experimente a peça no <b>Provador Virtual. 👇</b></div>
+      ${stamp()}
+    </div>
+    <div class="btns">
+      <button class="b" id="pickA"><span class="ms">straighten</span>Selecionar tamanho</button>
+    </div>`, 900);
+
+  state.busy = false;
+  el.querySelector('#pickA').onclick = () => { lockBtns(el); openSheet(true); };
+}
+
+/* ----- ROTA B: Detalhes do produto ----- */
+async function rotaB() {
+  setRoute('b');
+  mark('ramo', 'done');
+  pushUser('Detalhes do produto');
+  mark('explora', 'active');
+
+  await pushBot(`<div class="media"><img class="thumb" src="${IMG.foto3}" alt="Foto do produto">${stamp()}</div>`, 850);
+  await pushBot(`<div class="media"><img class="thumb" src="${IMG.foto1}" alt="Foto do produto">${stamp()}</div>`, 550);
+
+  await pushBot(`
+    <div class="body">
+      <div class="txt"><b>Blusa de tricot gola alta texturizado marrom </b>
+💰 R$ 139,99 à vista ou em <b>2x R$ 69,99</b> sem juros no C&amp;A Pay
+
+📏<b> Tamanhos disponíveis:</b> PP | M | GG
+<b>Cores</b>: Marrom
+
+✔️ Confeccionado em malha encorpada com textura canelada, modelagem evasê e caimento solto.
+✔️ Decote quadrado estruturado, alças largas e sem regulagem.
+✔️ Ideal para o dia a dia, com toque feminino, confortável e versátil.
+✔️ Composição: 49% algodão, 48% poliéster, 3% elastano
+
+Sugestão: combine com tênis ou sandálias para looks descontraídos ou acessórios para um visual mais sofisticado.</div>
+      ${stamp()}
+    </div>`, 1000);
+
+  const el = await pushBot(`
+    <div class="body">
+      <div class="txt">Gostou dos detalhes? Agora ficou mais fácil escolher!
+
+Se já souber o seu tamanho, é só <b>adicionar à sacola. </b>🛒
+
+Mas se preferir, você pode<b> provar no seu corpo</b> ou buscar itens similares abaixo: 👇</div>
+      ${stamp()}
+    </div>`, 900);
+
+  const qr = document.createElement('div');
+  qr.className = 'row left';
+  qr.innerHTML = `<div class="qr">
+    <button class="b" data-q="sacola">Adicionar à sacola </button>
+    <button class="b" data-q="provar">Provar no meu corpo</button>
+    <button class="b" data-q="similar">Buscar similares</button>
+  </div>`;
+  chat.appendChild(qr);
+  scroll();
+  state.busy = false;
+
+  qr.querySelectorAll('[data-q]').forEach(btn => {
+    btn.onclick = () => {
+      const q = btn.dataset.q;
+      if (q === 'similar') { note('Tela "Buscar similares" ainda não desenhada no Figma.'); return; }
+      lockBtns(qr);
+      if (q === 'sacola') { pushUser('Adicionar à sacola'); openSheet(true); }
+      else provador('Provar no meu corpo');
+    };
+  });
+}
+
+/* ----- LIST PICKER ----- */
+let sheetSel = null, sheetHasProvador = false;
+
+function openSheet(withProvador) {
+  sheetHasProvador = withProvador && !state.usedProvador;
+  sheetSel = null;
+  mark('tamanho', 'active');
+
+  const opts = document.getElementById('sheetOpts');
+  let html = `<div class="opt-section">Tamanhos disponíveis</div>`;
+  ['PP', 'M', 'GG'].forEach(s => {
+    html += `<div class="opt-row" data-v="${s}"><div class="label">${s}</div><div class="radio"><span class="ms">radio_button_unchecked</span></div></div>`;
+  });
+  if (sheetHasProvador) {
+    html += `<div class="opt-section">Provador virtual</div>
+      <div class="opt-row" data-v="__prov"><div class="label">📸 Provar em mim</div><div class="radio"><span class="ms">radio_button_unchecked</span></div></div>`;
+  }
+  html += `<div class="opt-section">Outras opções</div>
+    <div class="opt-row" data-v="__outro"><div class="label">Buscar outro modelo</div><div class="radio"><span class="ms">radio_button_unchecked</span></div></div>`;
+  opts.innerHTML = html;
+
+  opts.querySelectorAll('.opt-row').forEach(r => {
+    r.onclick = () => {
+      opts.querySelectorAll('.opt-row').forEach(x => {
+        x.classList.remove('sel');
+        x.querySelector('.radio .ms').textContent = 'radio_button_unchecked';
+      });
+      r.classList.add('sel');
+      r.querySelector('.radio .ms').textContent = 'radio_button_checked';
+      sheetSel = r.dataset.v;
+      document.getElementById('sheetSend').disabled = false;
+    };
+  });
+
+  document.getElementById('sheetSend').disabled = true;
+  document.getElementById('mask').classList.add('on');
+  document.getElementById('sheet').classList.add('on');
+}
+
+function closeSheet() {
+  document.getElementById('mask').classList.remove('on');
+  document.getElementById('sheet').classList.remove('on');
+}
+
+function sendSheet() {
+  const v = sheetSel;
+  closeSheet();
+  if (v === '__outro') { note('Tela "Buscar outro modelo" ainda não desenhada no Figma.'); return; }
+  if (v === '__prov') { provador('Provar em mim'); return; }
+  state.size = v;
+  sacola(v);
+}
+
+/* ----- PROVADOR (overlay) ----- */
+let ovStep = 0;
+const ovBody = document.getElementById('ovBody');
+
+function provador(label) {
+  state.usedProvador = true;
+  pushUser(label);
+  mark('provador', 'active');
+  ovStep = 0;
+  document.getElementById('overlay').classList.add('on');
+  renderOverlay();
+}
+
+function renderOverlay() {
+  if (ovStep === 0) {
+    document.getElementById('ovTitle').textContent = 'Provador Virtual — enviar foto';
+    ovBody.innerHTML = `<img src="${IMG.provador1}" alt="Enviar ou tirar foto">
+      <div class="ov-hint">Toque para continuar</div>`;
+  } else if (ovStep === 1) {
+    document.getElementById('ovTitle').textContent = 'Provador Virtual';
+    ovBody.innerHTML = `<img src="${IMG.provador2}" alt="Provador">
+      <div class="ov-hint">Toque para gerar</div>`;
+  } else if (ovStep === 2) {
+    document.getElementById('ovTitle').textContent = 'Gerando…';
+    ovBody.innerHTML = `<div class="flag">◆ estado não desenhado no Figma</div>
+      <div class="proc"><div class="ring"></div>
+        <div class="t">Gerando seu provador…</div>
+        <div class="s">Isso leva alguns segundos</div></div>`;
+    setTimeout(() => { ovStep = 3; nextOverlay(); }, 2400);
+  }
+}
+
+function nextOverlay() {
+  if (ovStep === 2) return;
+  if (ovStep >= 3) { fecharProvador(); return; }
+  ovStep++;
+  renderOverlay();
+}
+
+function skipOverlay() { fecharProvador(); }
+
+async function fecharProvador() {
+  document.getElementById('overlay').classList.remove('on');
+  await wait(280);
+  await resultado();
+}
+
+async function resultado() {
+  await pushBot(`<div class="media"><img class="thumb" src="${IMG.resultado}" alt="Resultado do provador">${stamp()}</div>`, 700);
+
+  const el = await pushBot(`
+    <div class="body">
+      <div class="txt"><b>Gostou do resultado?</b>
+
+Agora é só <b>selecionar o tamanho</b> para adicionar a peça à sua sacola.</div>
+      ${stamp()}
+    </div>
+    <div class="btns">
+      <button class="b" id="pickR"><span class="ms">straighten</span>Selecionar tamanho</button>
+    </div>`, 900);
+
+  el.querySelector('#pickR').onclick = () => { lockBtns(el); openSheet(false); };
+}
+
+/* ----- SACOLA ----- */
+async function sacola(size) {
+  pushUser(size);
+  mark('tamanho', 'done');
+  mark('sacola', 'active');
+
+  await pushBot(`
+    <div class="body">
+      <div class="txt">🛍️ <b>Sua sacola (1 Item)</b>
+
+<b>Blusa de tricot</b> gola alta texturizado marrom tamanho ${size}</div>
+      ${stamp()}
+    </div>`, 850);
+
+  const el = await pushBot(`
+    <div class="body">
+      <div class="txt">💰 <b>Subtotal:</b> R$139,99</div>
+      ${stamp()}
+    </div>
+    <div class="btns">
+      <button class="b" data-f="fim"><span class="ms">shopping_bag</span>Finalizar compra</button>
+      <button class="b" data-f="editar"><span class="ms">shopping_bag</span>Editar sacola</button>
+      <button class="b" data-f="outro"><span class="ms">shopping_bag</span>Buscar outro produto</button>
+    </div>`, 800);
+
+  el.querySelectorAll('[data-f]').forEach(btn => {
+    btn.onclick = () => {
+      const f = btn.dataset.f;
+      if (f !== 'fim') { note(`Tela "${btn.textContent.trim()}" ainda não desenhada no Figma.`); return; }
+      lockBtns(el);
+      pushUser('Finalizar compra');
+      mark('sacola', 'done');
+      mark('checkout', 'active');
+      setTimeout(() => note('Fim da jornada desenhada. Checkout ainda não mapeado no Figma.'), 700);
+    };
+  });
+}
+
+/* ----- painel (modo celular) ----- */
+function togglePanel() {
+  document.getElementById('panel').classList.toggle('on');
+}
+
+/* ----- reset ----- */
+function reset() {
+  document.getElementById('panel').classList.remove('on');
+  chat.innerHTML = '';
+  closeSheet();
+  document.getElementById('overlay').classList.remove('on');
+  state = { route: null, size: null, usedProvador: false, busy: false };
+  document.querySelectorAll('#track li').forEach(li => li.classList.remove('done', 'active'));
+  const b = document.getElementById('badge');
+  b.className = 'route-badge';
+  b.textContent = 'Aguardando escolha de rota';
+  start();
+}
+
+start();
+</script>
+</body>
+</html>
